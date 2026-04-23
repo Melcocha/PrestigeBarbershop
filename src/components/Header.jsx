@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
 const FacebookIcon = () => (
@@ -15,14 +15,36 @@ const InstagramIcon = () => (
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const headerRef = useRef(null)
   const location = useLocation()
 
   const isActive = (path) => location.pathname === path ? 'active' : ''
   const closeMenu = () => setMenuOpen(false)
 
+  // Guarda la altura inicial del header como variable CSS para que las
+  // páginas interiores puedan hacer padding-top correctamente
+  useEffect(() => {
+    const h = headerRef.current?.offsetHeight
+    if (h) document.documentElement.style.setProperty('--header-initial-h', `${h}px`)
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY
+      setScrolled(prev => {
+        if (!prev && y > 80) return true
+        if (prev && y < 30) return false
+        return prev
+      })
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   return (
     <>
-      <header className="header">
+      <header ref={headerRef} className={`header${scrolled ? ' scrolled' : ''}`}>
         <div className="topbar">
           📍 809 N. Mildred St, Suite 3 · Ranson, WV &nbsp;|&nbsp; ☎ (304) 350-9365
         </div>
